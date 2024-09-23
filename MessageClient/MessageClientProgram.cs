@@ -5,7 +5,7 @@ class MessageClientProgram
 {
     static async Task Main(string[] args)
     {
-        var baseUrl = "http://172.29.13.124:5273";
+        var baseUrl = "http://192.168.1.109:5273";
         using var client = new HttpClient(); //HttpClient() - класс для запросов http - GET, POST...
 
         while (true)
@@ -19,7 +19,7 @@ class MessageClientProgram
             }
 
             // Создаем объект для отправки
-            var messageModel = new { message = message }; // Изменяем поле на "message", чтобы оно соответствовало серверу
+            var messageModel = new { message = message };
             var json = JsonSerializer.Serialize(messageModel);
 
             // POST - запрос

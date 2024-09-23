@@ -5,25 +5,20 @@ class Program
     static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.WebHost.UseUrls("http://172.29.13.124:5273");
+        builder.WebHost.UseUrls("http://192.168.1.109:5273");
 
         var app = builder.Build();
 
+        // Включаем поддержку статических файлов
+        app.UseStaticFiles(); // Позволяет серверу обслуживать статические файлы
+
         List<string> messages = new List<string>();
 
-
-        //MapGet() даёт нам понять какой маршрут нужно выполнить /message или /name
+        // Отдаем index.html по корневому запросу
         app.MapGet("/", async context =>
         {
             context.Response.ContentType = "text/html; charset=utf-8"; // text/html - это тип ответа сервера, utf-8 - кодировка для коректного отображения текста
-
-            string response = "<h1>Сообщения:</h1><ul>";
-            foreach (var message in messages)
-            {
-                response += $"<h3>{message}</h3>";
-            }
-            response += "</ul>";
-            await context.Response.WriteAsync(response); // отправка готовой html страницы в ответ на запрос клиента 
+            await context.Response.SendFileAsync("Site/html/index.html"); // Отдаём index.html
         });
 
         // POST /message
@@ -53,7 +48,7 @@ class Program
 
         app.Run();
     }
-    //json?
+
     public class MessageModel
     {
         public string message { get; set; }
