@@ -19,16 +19,16 @@ class MessageClientProgram
             }
 
             // Создаем объект для отправки
-            var messageModel = new { Text = message };
+            var messageModel = new { message = message }; // Изменяем поле на "message", чтобы оно соответствовало серверу
             var json = JsonSerializer.Serialize(messageModel);
 
-            //POST - запрос
-            var content = new StringContent(json, Encoding.UTF8, "application/json"); // StringContent - отправляет,упаковывает JSON
-            var response = await client.PostAsync($"{baseUrl}/message", content); //PostAsync метод класса HttpClient, для выполнения post запроса
-            //baseUrl/message - базовый URL сервера/путь , content - содержит обьект StringContent строковое сообщение из Cmd
-            if (response.IsSuccessStatusCode) //свойство обьекта указывающее был ли запрос успешным
+            // POST - запрос
+            var content = new StringContent(json, Encoding.UTF8, "application/json"); // StringContent - отправляет, упаковывает JSON
+            var response = await client.PostAsync($"{baseUrl}/message", content); // PostAsync метод класса HttpClient, для выполнения post запроса
+            
+            if (response.IsSuccessStatusCode) // Проверяем, был ли запрос успешным
             {
-                var responseMessage = await response.Content.ReadAsStringAsync(); // обьект_запрос.свойство_обьекта.метод читает содержимое Content
+                var responseMessage = await response.Content.ReadAsStringAsync(); // Читаем содержимое ответа сервера
                 Console.WriteLine($"Ответ сервера: {responseMessage}");
             }
             else
