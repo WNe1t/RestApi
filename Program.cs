@@ -1,38 +1,61 @@
-var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://localhost:5273");
+using System.Text.Json;
 
-var app = builder.Build();
-
-
-List<string> messages = new List<string>();
-
-//MapGet() даёт нам понять какой маршрут нужно выполнить /message или /name
-app.MapGet("/", async context =>
+class Program
 {
-    context.Response.ContentType = "text/html; charset=utf-8"; // text/html - это тип ответа сервера, utf-8 - кодировка для коректного отображения текста
-
-    string response = "<h1>Сообщения:</h1><ul>";
-    foreach (var message in messages)
+    static void Main(string[] args)
     {
-        response += $"<h3>{message}</h3>";
-    }
-    response += "</ul>";
-    await context.Response.WriteAsync(response); // отправка готовой html страницы в ответ на запрос клиента 
-});
+        var builder = WebApplication.CreateBuilder(args);
+        builder.WebHost.UseUrls("http://172.29.13.124:5273");
 
-// POST /message
-app.MapPost("/message", async (HttpContext context) =>
-{
-    using (var reader = new StreamReader(context.Request.Body)) //StreamReader - читает данные из потока, context.Request.Body - поток данных клиента
+        var app = builder.Build();
+
+        List<string> messages = new List<string>();
+
+
+        //MapGet() даёт нам понять какой маршрут нужно выполнить /message или /name
+        app.MapGet("/", async context =>
+        {
+            context.Response.ContentType = "text/html; charset=utf-8"; // text/html - это тип ответа сервера, utf-8 - кодировка для коректного отображения текста
+
+            string response = "<h1>Сообщения:</h1><ul>";
+            foreach (var message in messages)
+            {
+                response += $"<h3>{message}</h3>";
+            }
+            response += "</ul>";
+            await context.Response.WriteAsync(response); // отправка готовой html страницы в ответ на запрос клиента 
+        });
+
+        // POST /message
+        app.MapPost("/message", async (HttpContext context) =>
+        {
+            using (var reader = new StreamReader(context.Request.Body))
+            {
+                string json = await reader.ReadToEndAsync(); // ReadToEndAsync для прочтения JSON из тела запроса
+                var messageModel = JsonSerializer.Deserialize<MessageModel>(json); // Десериализуем JSON в объект MessageModel
+
+                if (messageModel != null && !string.IsNullOrEmpty(messageModel.message))
+                {
+                    messages.Add(messageModel.message); // Добавляем текст сообщения в список
+                    Console.WriteLine($"Получено сообщение: {messageModel.message}");
+                    await context.Response.WriteAsync($"Сообщение получено: {messageModel.message}"); 
+                }
+                else
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync(":(");
+                }
+            }
+        });
+
+        // GET /name
+        app.MapGet("/name", () => "MyServer");
+
+        app.Run();
+    }
+    //json?
+    public class MessageModel
     {
-        string message = await reader.ReadToEndAsync(); //ReadToEndAsync() - используется для асинхронного четения всего содержимого потока до самого конца
-        messages.Add(message);
-        Console.WriteLine($"Получено сообщение: {message}");
-        await context.Response.WriteAsync($"Сообщение получено: {message}"); //отправка ответа сервера к клиенту
+        public string message { get; set; }
     }
-});
-
-// GET /name
-app.MapGet("/name", () => "MyServer"); // возвращает обычную строку
-
-app.Run(); //запускает сервер
+}
