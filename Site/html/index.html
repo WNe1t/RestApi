@@ -8,17 +8,20 @@
     <!-- тут хотел подключить локальные фаилы бутстрапа, но путь не находит решил просто поставить через CDN -->
 </head>
 <body>
-    <div class="container">
+    <div data-bs-theme="dark" class="container">
         <h1>Chat</h1>
         <form id="messageForm">
             <div class="form-group">
                 <label for="message">Сообщение:</label>
+                <p></p>
                 <input type="text" class="form-control" id="message" placeholder="Введите сообщение" required>
             </div>
+            <p></p>
             <button type="submit" class="btn btn-primary">Отправить</button>
         </form>
         <ul id="messagesList" class="list-group mt-3"></ul>
     </div>
+    
 
     <script>
         document.getElementById("messageForm").addEventListener("submit", async (e) => {
