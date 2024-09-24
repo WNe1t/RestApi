@@ -1,9 +1,8 @@
-using System.Text;
 using System.Text.Json;
 
 class Program
 {
-    static async Task Main(string[] args)
+    static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.WebHost.UseUrls("http://172.29.13.124:5273");
@@ -35,9 +34,6 @@ class Program
                     messages.Add(messageModel.message);
                     Console.WriteLine($"Получено сообщение: {messageModel.message}");
 
-                    // Отправляем сообщение на чужой сервер
-                    await SendMessageToExternalServer(messageModel.message);
-
                     await context.Response.WriteAsync($"Сообщение получено: {messageModel.message}");
                 }
                 else
@@ -54,37 +50,6 @@ class Program
         app.Run();
     }
 
-    // Тут отправка на другой сервер
-    public static async Task SendMessageToExternalServer(string message)
-    {
-        using (var client = new HttpClient())
-        {
-            var baseUrl = "http://172.29.9.90:3400/message"; // путь / адресс
-
-            
-            Console.WriteLine($"Отправка сообщения на {baseUrl}: {message}");
-
-            
-            var messageModel = new { message = message }; // messageModel объект для отправки
-            var json = JsonSerializer.Serialize(messageModel);
-
-            
-            var content = new StringContent(json, Encoding.UTF8, "application/json"); // JSON в StringContent
-
-            // POST запрос
-            var response = await client.PostAsync(baseUrl, content);
-
-            
-            if (response.IsSuccessStatusCode) // Проверка запроса
-            {
-                Console.WriteLine($"Сообщение доставленно: {baseUrl}");
-            }
-            else
-            {
-                Console.WriteLine($"Ошибка доставки SMS: {response.StatusCode}");
-            }
-        }
-    }
     public class MessageModel
     {
         public string message { get; set; }
