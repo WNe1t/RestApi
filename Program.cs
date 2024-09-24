@@ -12,10 +12,10 @@ class Program
 
         List<string> messages = new List<string>();
 
-        // Включаем поддержку статических файлов
+        
         app.UseStaticFiles();
 
-        // Отдаем index.html по корневому запросу
+        
         app.MapGet("/", async context =>
         {
             context.Response.ContentType = "text/html; charset=utf-8";
@@ -77,11 +77,11 @@ class Program
             
             if (response.IsSuccessStatusCode) // Проверка запроса
             {
-                Console.WriteLine($"Сообщение успешно отправлено на {baseUrl}");
+                Console.WriteLine($"Сообщение доставленно: {baseUrl}");
             }
             else
             {
-                Console.WriteLine($"Ошибка при отправке сообщения: {response.StatusCode}");
+                Console.WriteLine($"Ошибка доставки SMS: {response.StatusCode}");
             }
         }
     }
