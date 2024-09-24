@@ -1,85 +1,57 @@
-using System;
-using System.Net.Http;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-class MessageClientProgram
+class Program
 {
-    static async Task Main(string[] args)
+    static void Main(string[] args)
     {
-        var baseUrl = "http://172.29.13.124:5273"; // URL сервера
-        using var client = new HttpClient(); // HttpClient для отправки запросов
+        var builder = WebApplication.CreateBuilder(args);
+        builder.WebHost.UseUrls("http://172.29.13.124:5273");
 
-        while (true)
+        var app = builder.Build();
+
+        List<string> messages = new List<string>();
+
+        
+        app.UseStaticFiles();
+
+        
+        app.MapGet("/", async context =>
         {
-            Console.Write("Сообщение (введите 'exit' для выхода): ");
-            var message = Console.ReadLine();
+            context.Response.ContentType = "text/html; charset=utf-8";
+            await context.Response.SendFileAsync("Site/html/index.html");
+        });
 
-            if (message?.ToLower() == "exit")
+        // POST /message
+        app.MapPost("/message", async (HttpContext context) =>
+        {
+            using (var reader = new StreamReader(context.Request.Body))
             {
-                break;
-            }
+                string json = await reader.ReadToEndAsync();
+                var messageModel = JsonSerializer.Deserialize<MessageModel>(json);
 
-            // Создаем объект для отправки
-            var messageModel = new { message = message };
-            var json = JsonSerializer.Serialize(messageModel);
+                if (messageModel != null && !string.IsNullOrEmpty(messageModel.message))
+                {
+                    messages.Add(messageModel.message);
+                    Console.WriteLine($"Получено сообщение: {messageModel.message}");
 
-            // POST - запрос
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"{baseUrl}/message", content);
+                    await context.Response.WriteAsync($"Сообщение получено: {messageModel.message}");
+                }
+                else
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync(":(");
+                }
+            }
+        });
 
-            if (response.IsSuccessStatusCode) // Проверяем успешность запроса
-            {
-                var responseMessage = await response.Content.ReadAsStringAsync(); // Читаем ответ сервера
-                Console.WriteLine($"Ответ сервера: {responseMessage}");
-                
-                // Отправляем сообщение на другой сервер (если это необходимо)
-                await SendMessageToExternalServer(message);
-            }
-            else
-            {
-                Console.WriteLine($"Ошибка: {response.StatusCode}");
-            }
+        // GET /name
+        app.MapGet("/name", () => "MyServer");
 
-            // GET - запрос для получения имени сервера
-            var nameResponse = await client.GetAsync($"{baseUrl}/name");
-            if (nameResponse.IsSuccessStatusCode)
-            {
-                var serverName = await nameResponse.Content.ReadAsStringAsync();
-                Console.WriteLine($"Имя сервера: {serverName}");
-            }
-            else
-            {
-                Console.WriteLine($"Ошибка: {nameResponse.StatusCode}");
-            }
-        }
+        app.Run();
     }
 
-    // Отправка сообщения на другой сервер
-    public static async Task SendMessageToExternalServer(string message)
+    public class MessageModel
     {
-        using (var client = new HttpClient())
-        {
-            var baseUrl = "http://172.29.9.90:3400/message"; // Путь / адрес
-            Console.WriteLine($"Отправка сообщения на {baseUrl}: {message}");
-
-            var messageModel = new { message = message }; // messageModel объект для отправки
-            var json = JsonSerializer.Serialize(messageModel);
-
-            var content = new StringContent(json, Encoding.UTF8, "application/json"); // JSON в StringContent
-
-            // POST запрос
-            var response = await client.PostAsync(baseUrl, content);
-
-            if (response.IsSuccessStatusCode) // Проверка запроса
-            {
-                Console.WriteLine($"Сообщение доставлено: {baseUrl}");
-            }
-            else
-            {
-                Console.WriteLine($"Ошибка доставки сообщения: {response.StatusCode}");
-            }
-        }
+        public string message { get; set; }
     }
 }
