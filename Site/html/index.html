@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- тут хотел подключить локальные фаилы бутстрапа, но путь не находит решил просто поставить через CDN -->
+</head>
+<body>
+    <div data-bs-theme="dark" class="container">
+        <h1>Chat</h1>
+        <form id="messageForm">
+            <div class="form-group">
+                <label for="message">Сообщение:</label>
+                <p></p>
+                <input type="text" class="form-control" id="message" placeholder="Введите сообщение" required>
+            </div>
+            <p></p>
+            <button type="submit" class="btn btn-primary">Отправить</button>
+        </form>
+        <ul id="messagesList" class="list-group mt-3"></ul>
+    </div>
+    
+
+    <script>
+        document.getElementById("messageForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const messageInput = document.getElementById("message");
+            const message = messageInput.value;
+
+            const response = await fetch("/message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message })
+            });
+
+            if (response.ok) {
+                const responseText = await response.text();
+                console.log(responseText); //логи сервера
+                // обновляем список сообщений
+                const messagesList = document.getElementById("messagesList");
+                messagesList.innerHTML += `<li class="list-group-item">${message}</li>`;
+            } else {
+                console.error("Ошибка при отправке сообщения");
+            }
+
+            messageInput.value = ""; // очищаем поле ввода
+        });
+    </script>
+</body>
+</html>
