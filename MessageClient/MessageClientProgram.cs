@@ -3,9 +3,9 @@ using System.Text.Json;
 
 class MessageClientProgram
 {
-    static async Task Main(string[] args)
+    static async Task ClientMain(string[] args)
     {
-        var baseUrl = "http://192.168.1.109:5273";
+        var baseUrl = "http://172.29.13.124:5273";
         using var client = new HttpClient(); //HttpClient() - класс для запросов http - GET, POST...
 
         while (true)
