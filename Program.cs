@@ -11,17 +11,16 @@ class Program
 
         List<string> messages = new List<string>();
 
-        
         app.UseStaticFiles();
 
-        
+        // GET запрос для главной стр.
         app.MapGet("/", async context =>
         {
             context.Response.ContentType = "text/html; charset=utf-8";
             await context.Response.SendFileAsync("Site/html/index.html");
         });
 
-        // POST /message
+        // Обработка POST запроса для получения сообщений
         app.MapPost("/message", async (HttpContext context) =>
         {
             using (var reader = new StreamReader(context.Request.Body))
@@ -31,26 +30,37 @@ class Program
 
                 if (messageModel != null && !string.IsNullOrEmpty(messageModel.message))
                 {
-                    messages.Add(messageModel.message);
+                    // cохранение сообщений
+                    messages.Add($"Кто то: {messageModel.message}");
                     Console.WriteLine($"Получено сообщение: {messageModel.message}");
 
-                    await context.Response.WriteAsync($"Сообщение получено: {messageModel.message}");
+                    //отправка сообщения на другой сервер
+                    var sendingMessages = new SendingMessages();
+                    var externalServerResponse = await sendingMessages.SendMessageToExternalServer(messageModel.message);
+
+                    Console.WriteLine($"Собеседник: {externalServerResponse}");
+
+                    await context.Response.WriteAsync("Сообщение отправлено.");
                 }
                 else
                 {
                     context.Response.StatusCode = 400;
-                    await context.Response.WriteAsync(":(");
+                    await context.Response.WriteAsync("Ошибка: сообщение пустое.");
                 }
             }
         });
 
-        // GET /name
-        app.MapGet("/name", () => "MyServer");
+        // GET запрос для получения списка
+        app.MapGet("/messages", () =>
+        {
+            return JsonSerializer.Serialize(messages);
+        });
 
+        // Запуск сервера
         app.Run();
     }
 
-    public class MessageModel
+    public class MessageModel //JSON
     {
         public string message { get; set; }
     }
